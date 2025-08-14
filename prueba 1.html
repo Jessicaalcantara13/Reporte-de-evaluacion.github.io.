@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Evaluación - Grupo Centenio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Custom Styles & Color Palette --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Lighter gray for a cleaner look */
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -2px rgb(0 0 0 / 0.07);
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-align: center;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+        /* New Wine/Rose Color Palette */
+        .btn-primary {
+            background-color: #881337; /* rose-900 */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #4c0519; /* rose-950 */
+        }
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #1f2937;
+        }
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+        #areaDetailView, #profileList, #profileDetail {
+            display: none;
+        }
+        #introView {
+            display: block;
+        }
+        .tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+            color: #6b7280;
+        }
+        .tab.active {
+            color: #881337; /* rose-900 */
+            border-color: #881337; /* rose-900 */
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Encabezado -->
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Plan de Evaluación de Talento</h1>
+            <p class="text-lg text-gray-600">Cliente: Grupo Centenio</p>
+        </header>
+
+        <!-- Vista de Introducción -->
+        <section id="introView">
+            <div class="card p-6 md:p-8">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Descripción del Plan de Evaluación</h2>
+                <p class="text-gray-600 mb-4">
+                    El presente reporte consolida los resultados de un proceso de evaluación de talento realizado en áreas clave para la operación de Grupo Centenio, con el objetivo de obtener un diagnóstico preciso sobre las capacidades, conocimientos y potencial de nuestros colaboradores.
+                </p>
+                <h3 class="text-xl font-semibold text-gray-700 mb-3">Fases de la Evaluación</h3>
+                <p class="text-gray-600 mb-4">
+                    El proceso de evaluación se estructuró en tres fases fundamentales para una visión integral de cada perfil:
+                </p>
+                <ul class="list-disc list-outside space-y-3 text-gray-600 mb-6 pl-5">
+                    <li>
+                        <span class="font-semibold">Definición del Perfil de Puesto:</span> Se estableció una base objetiva de las competencias y conocimientos requeridos para cada rol.
+                    </li>
+                    <li>
+                        <span class="font-semibold">Entrevista por Competencias:</span> Se realizó una videollamada individual con cada colaborador, dirigida por un consultor de GBC, para conversar sobre su experiencia, habilidades blandas y alineación con la cultura de la empresa.
+                    </li>
+                    <li>
+                        <span class="font-semibold">Evaluación Técnica:</span> Se midió el dominio y la aplicación de los conocimientos técnicos a través de un cuestionario estandarizado en la plataforma Quilgo.
+                    </li>
+                </ul>
+                <p class="text-gray-600 mb-6">
+                    El propósito de este informe es presentar un panorama claro del estado actual de cada área, identificar las fortalezas individuales y colectivas, señalar las oportunidades de desarrollo y proponer planes de acción concretos.
+                </p>
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Seleccione un Área para ver los Resultados:</h3>
+                <div id="areaSelectionContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <!-- Botones de selección de área se insertarán aquí -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Vista de Detalle por Área -->
+        <main id="areaDetailView">
+             <div class="flex items-center mb-6">
+                <button id="backToIntroBtn" class="btn btn-secondary mr-4">← Volver</button>
+                <h2 id="areaDetailTitle" class="text-2xl font-semibold text-gray-700"></h2>
+            </div>
+            <div class="card p-6 md:p-8 mb-8">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Calificación General del Área</h3>
+                        <div class="relative h-64 w-64 mx-auto">
+                            <canvas id="areaChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Análisis y Recomendaciones</h3>
+                        <div id="analysisContainer" class="text-gray-600 text-sm space-y-3">
+                            <!-- JS will populate this -->
+                        </div>
+                        <div class="mt-8">
+                             <button id="viewProfilesBtn" class="btn btn-primary w-full">Ver Perfiles Evaluados del Área</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Sección de Perfil Ideal -->
+            <div id="idealProfileSection" class="card p-6 md:p-8">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Perfil Ideal del Puesto</h3>
+                <div id="idealProfileTabs" class="flex border-b border-gray-200 mb-4">
+                    <!-- Las pestañas se insertarán aquí -->
+                </div>
+                <div id="idealProfileContent">
+                    <!-- El contenido del perfil se insertará aquí -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Vista de Lista de Perfiles por Área -->
+        <section id="profileList">
+            <div class="flex items-center mb-6">
+                <button id="backToAreaBtn" class="btn btn-secondary mr-4">← Volver al Área</button>
+                <h2 id="profileListTitle" class="text-2xl font-semibold text-gray-700"></h2>
+            </div>
+            <div id="profilesContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+                <!-- Las tarjetas de perfil se insertarán aquí -->
+            </div>
+        </section>
+
+        <!-- Vista de Detalle de Perfil Individual -->
+        <section id="profileDetail">
+            <div class="flex items-center mb-6">
+                <button id="backToProfilesBtn" class="btn btn-secondary mr-4">← Volver a Perfiles</button>
+                <h2 id="profileName" class="text-2xl font-semibold text-gray-700"></h2>
+            </div>
+            <div class="card p-6 md:p-8">
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    <div class="lg:col-span-3">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Entrevista Grabada</h3>
+                        <div id="videoContainer" class="space-y-4">
+                           <!-- El Iframe del video se insertará aquí -->
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4 mt-8">Reporte de Evaluación</h3>
+                        <p id="profileReport" class="text-gray-600 leading-relaxed"></p>
+                    </div>
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="bg-gray-50 p-6 rounded-lg">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Calificación Obtenida</h4>
+                            <div class="text-center">
+                                <p class="text-5xl font-bold text-rose-900"><span id="profileScore"></span>/100</p>
+                                <div id="semaphoreDetailContainer" class="mt-4">
+                                    <!-- JS will populate this -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-lg">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Actividades de capacitación sugeridas</h4>
+                            <ul id="trainingPlan" class="list-disc list-inside space-y-2 text-gray-600">
+                                <!-- El plan de capacitación se insertará aquí -->
+                            </ul>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-lg">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Documentos de Soporte</h4>
+                            <div class="flex flex-col space-y-3">
+                                <a id="examLink" href="#" target="_blank" class="btn btn-secondary">Examen Técnico Calificado</a>
+                                <a id="interviewLink" href="#" target="_blank" class="btn btn-secondary">Reporte de Entrevista (Excel)</a>
+                                <a id="notebookLink" href="#" target="_blank" class="btn btn-secondary">Análisis de Entrevista (NotebookLM)</a>
+                                <a id="finalReportLink" href="#" target="_blank" class="btn btn-secondary">Reporte Final de la Evaluación</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // --- Mock Data ---
+        const evaluationData = {
+            nominas: {
+                title: "Nóminas",
+                scores: { technical: 85, general: 70, personal: 90 },
+                analysis: [
+                    "<strong>Resultados Obtenidos:</strong> El área demuestra un nivel de competencia técnica sobresaliente. Con calificaciones de 81% para la coordinadora y un 89% para el analista, el equipo posee un profundo conocimiento de la legislación, los procesos del IMSS y el cálculo de nómina, posicionándose como una de las áreas más sólidas de la organización.",
+                    "<strong>Comentarios Generales:</strong> El equipo de Nóminas es un activo estratégico con un enorme potencial sin explotar. La principal barrera para su desarrollo no es la falta de conocimiento, sino la dependencia actual de un despacho externo que limita su ejecución directa. Poseen la visión, el conocimiento y la motivación para llevar el área al siguiente nivel.",
+                    "<strong>Recomendaciones y Plan de Acción:</strong> Es fundamental capitalizar este talento interno y reducir la dependencia externa. Se debe iniciar de inmediato un proyecto para internalizar el 100% del procesamiento de la nómina, proveyendo al equipo del software necesario (CONTPAQi) y la autoridad para ejecutar el cambio. Esta acción no solo optimizará costos, sino que aumentará el control y la agilidad de la empresa."
+                ],
+                employees: [
+                    { 
+                        id: 8, 
+                        name: "Lizett Garitia Diaz", 
+                        role: "Coordinadora", 
+                        score: 91, 
+                        report: "Lizett es una candidata de alto potencial con una combinación poco común de visión estratégica, experiencia en optimización de procesos y un sólido conocimiento técnico (82%). Su principal área de desarrollo es la transición de ser una excelente gestora y enlace a convertirse en una operadora experta de las herramientas de nómina, ya que el proceso actualmente es externo. Su visión para profesionalizar el área es exactamente lo que la empresa necesita.", 
+                        videoUrl: "https://www.youtube.com/embed/-nykMwXHCgE", 
+                        examUrl: "https://drive.google.com/file/d/1FmFkiEiNDH2yHf8xd8vJnQIan-b1VOou/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/16HFYMFAvr-jMYyvEdDXK4fTqpRCxVQU6/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/9b00d2b8-022c-473a-b965-7d7c216af01e?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1hga1cq5RW1aGD9pZknfo8kNeheLa_Jq1/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Capacitación Intensiva en Software de Nóminas (CONTPAQi): Nivel: Experto.",
+                            "Diplomado en Legislación Laboral y Seguridad Social: Nivel: Especialización.",
+                            "Seminario de Liderazgo y Desarrollo de Equipos: Nivel: Liderazgo.",
+                            "Taller de Análisis y Reporteo de KPIs de RH: Nivel: Avanzado."
+                        ] 
+                    },
+                     { 
+                        id: 11, 
+                        name: "Cristian de la Cruz Martinez", 
+                        role: "Analista", 
+                        score: 93, 
+                        report: "Cristian es un perfil de altísimo potencial, con un desempeño técnico sobresaliente (89%) y un profundo conocimiento de los procesos de RH de la empresa. Su fuerte mentalidad de cumplimiento y su rápida capacidad de aprendizaje lo convierten en una apuesta de bajo riesgo y alta recompensa. Su única área de desarrollo es aplicar su vasto conocimiento teórico a la práctica diaria de un software de nóminas.", 
+                        videoUrl: "https://www.youtube.com/embed/00uQITd6gJs", 
+                        examUrl: "https://drive.google.com/file/d/1yurvZovdOE6XPA7Or29VWJZQ03zULJQT/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1YjInyjULS37zTNKKErm3HfePVYveKYDS/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/7bf6f6f7-9902-4d78-8419-ec9cee3022d9?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1rcwPv7ACu3dmBMOTRTnVFeK_BZ-YaBu6/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Capacitación Práctica en Software de Nóminas (CONTPAQi): Nivel: Fundamental.",
+                            "Taller sobre el Ciclo Completo de la Nómina: Nivel: Intermedio.",
+                            "Curso Avanzado en IMSS (SUA e IDSE): Nivel: Especialización.",
+                            "Taller de Cálculo de Finiquitos y Liquidaciones: Nivel: Intermedio.",
+                            "Curso de Excel para Nóminas: Nivel: Avanzado."
+                        ] 
+                    }
+                ],
+                idealProfiles: {
+                    coordinador: {
+                        name: "Coordinador de Nóminas",
+                        objetivo: "Planificar, organizar y supervisar de forma integral el proceso de cálculo y pago de la nómina, asegurando el cumplimiento de la legislación laboral y fiscal, y contribuyendo a la eficiencia administrativa de la empresa.",
+                        funciones: ["Supervisar y validar el cálculo y procesamiento de la nómina.", "Asegurar el timbrado correcto y oportuno de los CFDI de nómina.", "Coordinar y validar el cálculo y pago de impuestos y contribuciones (IMSS, Infonavit, ISN).", "Liderar y desarrollar al equipo de analistas de nómina."],
+                        experiencia: "Mínimo 4 a 6 años de experiencia en el área de nóminas, con al menos 2 años en una posición de supervisión o coordinación de equipos.",
+                        conocimientos: ["Dominio de la Ley Federal del Trabajo (LFT) y la Ley del Seguro Social (LSS).", "Manejo de plataformas del SAT, IDSE y SUA.", "Cálculo de finiquitos, liquidaciones y PTU.", "Dominio de software de nóminas y Excel avanzado."]
+                    },
+                    analista: {
+                        name: "Analista de Nóminas",
+                        objetivo: "Apoyar en el procesamiento oportuno y preciso de la nómina, el control de incidencias y la gestión de la información de los colaboradores para asegurar el pago correcto y el cumplimiento de las obligaciones.",
+                        funciones: ["Recopilar, validar y capturar incidencias de nómina (faltas, incapacidades, vacaciones).", "Realizar altas, bajas y modificaciones de salario en los sistemas correspondientes (IDSE, SUA).", "Apoyar en el cálculo preliminar y la revisión de la nómina.", "Mantener actualizado y organizado el expediente de personal."],
+                        experiencia: "De 1 a 3 años de experiencia en puestos de nóminas, recursos humanos o administración.",
+                        conocimientos: ["Conceptos básicos de la LFT y la LSS.", "Manejo básico-intermedio de plataformas del IMSS.", "Cálculo de percepciones y deducciones.", "Manejo de Excel a nivel intermedio y alta atención al detalle."]
+                    }
+                }
+            },
+            contabilidad: {
+                title: "Contabilidad",
+                scores: { technical: 87, general: 75, personal: 85 },
+                analysis: [
+                    "<strong>Resultados Obtenidos:</strong> El área cuenta con un liderazgo técnicamente muy sólido, como lo demuestra la calificación de 87% del coordinador. Existe un profundo conocimiento del ciclo contable, las normativas fiscales y las Normas de Información Financiera (NIF), lo que asegura una base de cumplimiento robusta.",
+                    "<strong>Comentarios Generales:</strong> El departamento posee la capacidad técnica y la visión de control interno necesarias para ser un pilar financiero. El principal desafío no es el conocimiento, sino la dependencia de procesos manuales y la falta de herramientas que permitan automatizar la operación y reducir el riesgo de errores.",
+                    "<strong>Recomendaciones y Plan de Acción:</strong> Se debe confirmar a Gabriel como Coordinador y empoderarlo para que implemente su visión de control. Es crucial iniciar un proyecto de integración del sistema de punto de venta (POS) con el ERP para automatizar el registro de ingresos. Finalmente, se debe crear un Manual de Políticas Contables para estandarizar los procesos en toda la organización."
+                ],
+                employees: [
+                    { 
+                        id: 6, 
+                        name: "Gabriel Suarez Mendez", 
+                        role: "Coordinador de Contabilidad", 
+                        score: 90, 
+                        report: "Gabriel es un candidato técnicamente muy sólido (88%), con una mentalidad orientada a procesos y control, ideal para la coordinación del área. Su experiencia interna en planeación financiera le da una ventaja estratégica, permitiéndole conectar la contabilidad con las decisiones del negocio. Su principal área de desarrollo es consolidar sus habilidades de liderazgo y gestión de equipos para poder ejecutar su visión de control con eficacia.", 
+                        videoUrl: "https://www.youtube.com/embed/hicFd4yk79c", 
+                        examUrl: "https://drive.google.com/file/d/1VF3PP5tkJfkbZ9QlpOowmoSR991jwjQu/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1MkLT3H0bQvK_PDQE4-Bv4woVnSZWW_kL/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/3014b287-3c9f-40a1-9abd-d52bdce65ab3?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1BiY4kizEDnXbnEWjQEMo9jbnWfWtQ0ps/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Seminario de Liderazgo para Nuevos Managers: Nivel: Liderazgo.",
+                            "Taller de Automatización de Procesos Contables: Nivel: Avanzado.",
+                            "Curso de Normas de Información Financiera (NIF) Avanzadas: Nivel: Especialización.",
+                            "Diplomado en Contraloría: Nivel: Estratégico."
+                        ] 
+                    }
+                ],
+                idealProfiles: {
+                    coordinador: {
+                        name: "Coordinador de Contabilidad",
+                        objetivo: "Planificar, organizar y supervisar la totalidad de las operaciones contables y fiscales, asegurando la veracidad y oportunidad de la información financiera para la correcta toma de decisiones.",
+                        funciones: [
+                            "Supervisar y validar el registro de todas las operaciones contables.",
+                            "Asegurar la correcta aplicación de NIF y legislación fiscal vigente.",
+                            "Preparar, analizar y presentar estados financieros.",
+                            "Coordinar y validar el cálculo y pago de impuestos federales y estatales."
+                        ],
+                        experiencia: "Mínimo 4 a 6 años de experiencia en el área de contabilidad general e impuestos, con al menos 2 años en una posición de supervisión o coordinación de equipos.",
+                        conocimientos: [
+                            "Dominio de Normas de Información Financiera (NIF) y legislación fiscal (LISR, LIVA).",
+                            "Manejo de plataformas del SAT, IDSE y SUA.",
+                            "Contabilidad de costos y elaboración de presupuestos.",
+                            "Dominio de Excel avanzado y deseable manejo de ERPs."
+                        ]
+                    }
+                }
+            },
+            compras: {
+                title: "Compras",
+                scores: { technical: 89, general: 85, personal: 90 },
+                analysis: [
+                    "<strong>Resultados Obtenidos:</strong> El área demuestra una capacidad técnica excepcional a nivel de análisis, con calificaciones sobresalientes (93%). El coordinador posee una base de conocimientos sólida (81%), lo que indica que el equipo en su conjunto tiene el dominio técnico necesario para ejecutar y supervisar la operación de manera efectiva.",
+                    "<strong>Comentarios Generales:</strong> Existe una base de talento muy fuerte, con analistas capaces de una ejecución impecable y un coordinador con una clara visión estratégica. El principal desafío del área no es la falta de capacidad, sino la ausencia de procesos estandarizados y herramientas que permitan canalizar este talento de manera eficiente.",
+                    "<strong>Recomendaciones y Plan de Acción:</strong> Es crucial formalizar el liderazgo del coordinador para que pueda implementar su visión estratégica. Se debe capitalizar el conocimiento de los analistas para crear e implementar procesos robustos, como un sistema de evaluación de proveedores (Scorecard) y un análisis estandarizado de Costo Total de Adquisición (TCA). La capacitación debe enfocarse en cerrar las brechas específicas del coordinador en reporte financiero."
+                ],
+                employees: [
+                    { 
+                        id: 1, 
+                        name: "Ricardo Bestard", 
+                        role: "Coordinador de Compras", 
+                        score: 89, 
+                        report: "Ricardo es un candidato que demuestra un potencial de liderazgo y una visión estratégica muy claros para el área de Compras. Durante el proceso, destacó por su capacidad para diagnosticar problemas estructurales y proponer soluciones de alto nivel. Su evaluación técnica (81%) es buena, aunque revela que su principal área de oportunidad es fortalecer su conocimiento en la ejecución técnica y el análisis financiero para poder implementar su visión de manera más efectiva y robusta.", 
+                        videoUrl: "https://www.youtube.com/embed/jsc9q-zniAI", 
+                        examUrl: "https://drive.google.com/file/d/1GbX39zOmdrcjH5KbSeE5QhcXtwRGdX20/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1_K6tseOse-N8fkxe4EMD_EDCggUaiQij/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/2e7313cb-d5f9-4ec9-b63a-22875dd31333?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1xWpISdqWD2UTe8us-fpel4jtJDK0pWQB/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Certificación en Negociación Estratégica y Contratos – Nivel avanzado",
+                            "Seminario de Implementación de Modelos de Costo Total (TCA) – Nivel liderazgo",
+                            "Curso de Liderazgo en la Cadena de Suministro – Nivel liderazgo",
+                            "Diplomado en \"Category Management\" – Nivel especialización"
+                        ] 
+                    },
+                    { 
+                        id: 2, 
+                        name: "Alejandro Fernández", 
+                        role: "Analista de Compras", 
+                        score: 92, 
+                        report: "Alejandro es un candidato técnicamente sobresaliente (93%) con un profundo dominio de las funciones operativas del analista de compras. Es proactivo, claro en su comunicación y demuestra una excelente capacidad para el análisis de costos y la gestión de procesos. Su principal área de desarrollo es evolucionar de un ejecutor táctico impecable a un analista con una visión más estratégica, capaz de proponer iniciativas de ahorro a gran escala.", 
+                        videoUrl: "https://www.youtube.com/embed/KFl2Jx0aVc8", 
+                        examUrl: "https://drive.google.com/file/d/1dsRo4i9_In6UM2JUOpHMXzOsUmrSKuO5/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1pOKJS87ELFDc6Ay2BpMNFfRK7_i56XDC/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/41a94308-930e-483f-8a68-fa8797b0bb3e?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1iP6N-83YBRdieCbY5pZ0ppfPe-nffFmn/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Curso de Negociación para Compradores: Nivel: Intermedio.",
+                            "Seminario de Análisis de Costo Total (TCA): Nivel: Fundamental.",
+                            "Taller de Gestión y Evaluación de Proveedores (SRM): Nivel: Intermedio.",
+                            "Taller de Introducción al \"Category Management\": Nivel: Introductorio."
+                        ] 
+                    },
+                    { 
+                        id: 3, 
+                        name: "Osvaldo Vazquez", 
+                        role: "Analista de Compras", 
+                        score: 91, 
+                        report: "Osvaldo es un candidato técnicamente muy competente (92%), con un profundo conocimiento práctico de la operación de Grupo Centenio. Es un profesional proactivo y resiliente, capaz de lograr resultados en entornos con poca estructura. Su principal área de desarrollo es complementar su gran experiencia práctica con los fundamentos teóricos y analíticos formales, como el análisis de Costo Total de Adquisición (TCA), para evolucionar de un ejecutor eficaz a un analista estratégico.", 
+                        videoUrl: "https://www.youtube.com/embed/1qGDWFsPeZg", 
+                        examUrl: "https://drive.google.com/file/d/13wKctnc_HBD81fxYUhZUm63EA6M0cesg/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1S65lMW_tqRlbaajFrpSsBYbycM3cewtc/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/34801180-2330-4301-915a-89595281b06f?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1GKO7bFbPaF5QvwvKr-cqeYDGdqI1TVG0/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Curso de Negociación para Compradores: Nivel: Intermedio.",
+                            "Seminario de Análisis de Costo Total (TCA): Nivel: Fundamental.",
+                            "Taller de Gestión y Evaluación de Proveedores (SRM): Nivel: Intermedio.",
+                            "Curso de Excel Avanzado para Finanzas: Nivel: Avanzado."
+                        ] 
+                    },
+                ],
+                idealProfiles: {
+                    coordinador: {
+                        name: "Coordinador de Compras",
+                        objetivo: "Planificar, dirigir y controlar las actividades de adquisición de bienes y servicios, asegurando el abastecimiento óptimo a través de la negociación estratégica con proveedores y la gestión eficiente del presupuesto.",
+                        funciones: [
+                            "Desarrollar e implementar estrategias de compra y ahorro.",
+                            "Negociar con proveedores clave y gestionar contratos.",
+                            "Liderar, supervisar y desarrollar al equipo de analistas de compras.",
+                            "Analizar el mercado para identificar riesgos y oportunidades."
+                        ],
+                        experiencia: "Mínimo 3 a 5 años de experiencia en el área de compras, con al menos 2 años en una posición de liderazgo o coordinación de equipos.",
+                        conocimientos: [
+                            "Técnicas de negociación y gestión de proveedores.",
+                            "Análisis de costos y elaboración de presupuestos.",
+                            "Dominio de Excel avanzado y deseable conocimiento de algún ERP.",
+                            "Desarrollo de estrategias de \"Category Management\"."
+                        ]
+                    },
+                    analista: {
+                        name: "Analista de Compras",
+                        objetivo: "Ejecutar el ciclo completo de órdenes de compra, desde la requisición hasta el seguimiento de la entrega, asegurando el correcto abastecimiento de las sucursales y manteniendo actualizada la base de datos de proveedores.",
+                        funciones: [
+                            "Generar y dar seguimiento a órdenes de compra.",
+                            "Realizar cotizaciones y análisis comparativos de precios.",
+                            "Mantener la comunicación con proveedores para el seguimiento de pedidos.",
+                            "Elaborar reportes periódicos de consumo y niveles de compra."
+                        ],
+                        experiencia: "De 0 a 2 años de experiencia en áreas de compras, administración o puestos afines.",
+                        conocimientos: [
+                            "Manejo de Excel a nivel intermedio-avanzado (tablas dinámicas, fórmulas).",
+                            "Conocimiento del proceso administrativo de compras.",
+                            "Habilidad para la organización y atención al detalle.",
+                            "Capacidad de análisis numérico."
+                        ]
+                    }
+                }
+            },
+            pagar: {
+                title: "Cuentas por Pagar",
+                scores: { technical: 40, general: 50, personal: 45 },
+                analysis: [
+                    "<strong>Resultados Obtenidos:</strong> Los resultados del área son críticos y revelan una deficiencia técnica generalizada. Las calificaciones (Coordinadora 56%, Analistas 30% y 35%) demuestran una falta de conocimiento fundamental en procesos fiscales, de control interno y en el uso de herramientas de análisis.",
+                    "<strong>Comentarios Generales:</strong> El área opera con un riesgo fiscal y financiero muy elevado. La dependencia de procesos manuales y la falta de conocimientos técnicos del equipo la convierten en un eslabón débil. Aunque el personal es leal y trabajador, actualmente no está capacitado para cumplir con las responsabilidades de sus roles de manera segura.",
+                    "<strong>Recomendaciones y Plan de Acción:</strong> Se requiere una intervención urgente y drástica. Es indispensable reestructurar el liderazgo del área, considerando un perfil con experiencia técnica comprobada. Se debe implementar un plan de capacitación de \"Nivel Cero\" para todo el equipo, enfocado en validación de CFDI, control interno (conciliación a tres vías) y uso de Excel, con una reevaluación posterior para determinar la idoneidad del personal."
+                ],
+                 employees: [
+                    { 
+                        id: 5, 
+                        name: "Areli Maceda", 
+                        role: "Coordinadora", 
+                        score: 51, 
+                        report: "Areli es una empleada de enorme valor por su lealtad y conocimiento de la operación histórica de la empresa. Sin embargo, su evaluación técnica (56%) demuestra que su perfil no se alinea con las competencias requeridas para un Coordinador de CxP. Su conocimiento es puramente práctico y carece de los fundamentos fiscales y de control interno que son indispensables para identificar riesgos y optimizar el área, representando un riesgo significativo para la compañía.", 
+                        videoUrl: "https://www.youtube.com/embed/IpHjGInjJXc", 
+                        examUrl: "https://drive.google.com/file/d/1pqq0HxdbtRdEOwndGoTPSB8H2z5_klxm/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1gQnQVKxdHVTAjdMEKEAqmgadT_6l-2TR/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/e6882684-7989-445e-a5a1-c1de4fb797d0?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1dvzZQvF4vnVXDDOtPuJ4Xxk7sgexJFXQ/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Diplomado en Cuentas por Pagar y Fiscalidad: Nivel: Fundamental.",
+                            "Curso de Control Interno en el Ciclo \"Procure-to-Pay\": Nivel: Fundamental.",
+                            "Taller de Análisis de Capital de Trabajo y DPO: Nivel: Introductorio.",
+                            "Seminario de Liderazgo y Gestión de Equipos Financieros: Nivel: Liderazgo.",
+                            "Curso de Excel para Finanzas: Nivel: Básico-Intermedio."
+                        ] 
+                    },
+                    { 
+                        id: 7, 
+                        name: "Josue Toledo", 
+                        role: "Analista", 
+                        score: 39, 
+                        report: "Josué es un empleado leal y con una excelente disposición para aprender. Sin embargo, su evaluación técnica (31%) revela una brecha de conocimiento muy significativa que lo posiciona como un auxiliar en capacitación, no como un analista. Carece de los fundamentos técnicos, fiscales y de control que son la base indispensable del puesto.", 
+                        videoUrl: "https://www.youtube.com/embed/agT8gB-gc_8", 
+                        examUrl: "https://drive.google.com/file/d/1FyrXYn0PVrpz4CJ3fJn70_feGyXhYKik/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1zwMRNWWTWtiVcfVZFs1IIxqpYVxQ9eYf/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/25a829ae-6076-4b2b-9f38-cc89e8c7a689?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1fQSGTI3EWhNTI2JKI1GJOYPIV9PpejsC/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Curso de Fundamentos de Cuentas por Pagar: Nivel: Básico.",
+                            "Curso de Excel Básico a Intermedio: Nivel: Fundamental.",
+                            "Taller de Comunicación Efectiva con Proveedores: Nivel: Introductorio.",
+                            "Seminario sobre el Portal del SAT: Nivel: Básico."
+                        ] 
+                    },
+                    { 
+                        id: 9, 
+                        name: "Jesús Santiago", 
+                        role: "Analista", 
+                        score: 42, 
+                        report: "Jesús es un empleado comprometido que ha logrado mantener la operación diaria gracias a su dedicación y sus buenas habilidades de comunicación. No obstante, su evaluación técnica (36%) demuestra una profunda falta de conocimientos técnicos, fiscales y de control, posicionándolo como un auxiliar en capacitación. Su perfil actual es el de un operador de tareas, con un largo camino por recorrer para convertirse en un analista financiero.", 
+                        videoUrl: "https://www.youtube.com/embed/jFQCEC4CXk8", 
+                        examUrl: "https://drive.google.com/file/d/1uNMpaLrmVZOj1u5sjQz3dND6iUpUloHD/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1asXyvx3v-_5EFMVGGJ1yEi-ds1dYVZll/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/362b4aaa-9fe8-4e79-ae97-10c0785bae76?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/17IzXMItonyHVtYT_RkCL4N9nrmdCBVbz/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Curso de Fundamentos de Cuentas por Pagar: Nivel: Básico.",
+                            "Taller de Principios de Control Interno: Nivel: Básico.",
+                            "Taller de Comunicación Efectiva con Proveedores: Nivel: Introductorio.",
+                            "Seminario sobre el Portal del SAT: Nivel: Básico."
+                        ] 
+                    }
+                ],
+                idealProfiles: {
+                    coordinador: {
+                        name: "Coordinador de Cuentas por Pagar",
+                        objetivo: "Liderar y supervisar el ciclo completo de cuentas por pagar, asegurando la precisión, oportunidad y cumplimiento fiscal de todos los pagos a proveedores, y optimizando el capital de trabajo de la empresa.",
+                        funciones: [
+                            "Supervisar la correcta validación y registro de todas las facturas.",
+                            "Diseñar, implementar y mantener controles internos robustos.",
+                            "Analizar la antigüedad de saldos y gestionar la programación de pagos.",
+                            "Liderar la relación con proveedores en temas de pago y resolver disputas."
+                        ],
+                        experiencia: "Mínimo 4 a 6 años de experiencia en cuentas por pagar o contabilidad general, con al menos 2 años en una posición de supervisión o coordinación.",
+                        conocimientos: [
+                            "Dominio de la legislación fiscal aplicable (CFDI 4.0, complementos de pago, IVA).",
+                            "Experiencia en la implementación de controles (conciliación a tres vías).",
+                            "Análisis de capital de trabajo y Días de Pago a Proveedores (DPO).",
+                            "Dominio de Excel avanzado y deseable manejo de algún ERP."
+                        ]
+                    },
+                    analista: {
+                        name: "Analista de Cuentas por Pagar",
+                        objetivo: "Ejecutar el proceso de registro, validación y control de las facturas de proveedores, asegurando que toda la documentación cumpla con los requisitos fiscales y las políticas de la compañía antes de ser programada para su pago.",
+                        funciones: [
+                            "Verificar que las facturas cumplan con los requisitos fiscales vigentes (XML y PDF).",
+                            "Realizar el cotejo de facturas contra órdenes de compra y reportes de recepción.",
+                            "Registrar las facturas en el sistema y mantener la base de datos de proveedores actualizada.",
+                            "Atender y dar seguimiento a las consultas de los proveedores sobre el estado de sus pagos."
+                        ],
+                        experiencia: "De 1 a 3 años de experiencia en puestos de cuentas por pagar, contabilidad o administración.",
+                        conocimientos: [
+                            "Conocimiento de los requisitos fiscales de un CFDI.",
+                            "Manejo de Excel a nivel intermedio.",
+                            "Principios básicos de control interno.",
+                            "Habilidad para la organización y alta atención al detalle."
+                        ]
+                    }
+                }
+            },
+            tesoreria: {
+                title: "Tesorería",
+                scores: { technical: 65, general: 55, personal: 60 },
+                analysis: [
+                    "<strong>Resultados Obtenidos:</strong> El área presenta una heterogeneidad extrema en sus competencias técnicas. Coexisten perfiles con un alto dominio (Gerson 81%, Guillermina 82%, Jorge 82%) junto a otros con deficiencias críticas (Areli 18%, Mayra 51%, Paola 69%), lo que evidencia una falta total de estandarización en el conocimiento y la capacidad del equipo.",
+                    "<strong>Comentarios Generales:</strong> La tesorería opera con un liderazgo fragmentado y sin una dirección técnica unificada, lo que genera riesgos operativos significativos. La falta de conocimiento en principios básicos de control interno y gobierno corporativo en varios miembros, incluyendo coordinadores, es una vulnerabilidad crítica que debe ser atendida de manera inmediata.",
+                    "<strong>Recomendaciones y Plan de Acción:</strong> Se requiere una reestructuración urgente del liderazgo, consolidando la coordinación en un solo perfil que demuestre tanto visión estratégica como competencia técnica. Es imperativo implementar un plan de capacitación fundamental y obligatorio para todo el equipo, seguido de una reevaluación para confirmar la idoneidad en los roles. Finalmente, se deben formalizar y documentar todos los procesos para estandarizar la operación y mitigar los riesgos."
+                ],
+                employees: [
+                    { 
+                        id: 12, 
+                        name: "Areli Maceda", 
+                        role: "Coordinadora", 
+                        score: 38, 
+                        report: "Areli es una empleada de gran valor por su lealtad y conocimiento de la operación histórica de la empresa. Sin embargo, su evaluación técnica (19%) demuestra que su perfil no se alinea con las competencias requeridas para un Coordinador de Tesorería. Su conocimiento es puramente práctico y carece de los fundamentos técnicos, de control y de gobierno corporativo que son indispensables para el rol.", 
+                        videoUrl: "https://www.youtube.com/embed/IpHjGInjJXc", 
+                        examUrl: "https://drive.google.com/file/d/1WERwgNi7WnLTDFLsiz9jpHGKjY7Y-ITz/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1gQnQVKxdHVTAjdMEKEAqmgadT_6l-2TR/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/4c8ae72a-5391-49bf-9365-a2fe56fac2bb?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1fHKtvJTdzn6RBo0LIBR14xcHOlDjhI79/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Curso de Gobierno Corporativo y Ética: Nivel: Fundamental.",
+                            "Taller de Análisis y Proyección de Flujo de Efectivo: Nivel: Básico.",
+                            "Curso de Excel para Finanzas: Nivel: Básico-Intermedio.",
+                            "Seminario de Gestión de Relaciones Bancarias: Nivel: Introductorio."
+                        ] 
+                    },
+                    { 
+                        id: 13, 
+                        name: "Sergio Camacho", 
+                        role: "Coordinador", 
+                        score: 71, 
+                        report: "Sergio es un empleado experimentado y leal con un valioso conocimiento operativo. Sin embargo, su evaluación técnica (73%) revela una brecha preocupante entre su experiencia práctica y su dominio de los conceptos estratégicos y de gobierno corporativo. Su perfil es el de un excelente ejecutor senior, pero no el de un líder con la capacidad para salvaguardar los activos de la empresa con un control robusto.", 
+                        videoUrl: ["https://www.youtube.com/embed/bHvsKmrRMiE", "https://www.youtube.com/embed/NY6BIbXude8"], 
+                        examUrl: "https://drive.google.com/file/d/1F1xzHqwKmzSJc_HWINnMJqDhuAQf3WbA/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/144nhpquNdPtCDoQYMW7y7HtMWd8SYyV2/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/02f8bd11-fa29-4d5a-a5c3-b0ae6b058e91?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1ydf-OV1vNPtSbuM5QBH2gIgP6k_nM-O9/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Taller de Análisis y Proyección de Flujo de Efectivo: Nivel: Intermedio.",
+                            "Seminario de Gestión de Riesgos Financieros: Nivel: Intermedio.",
+                            "Curso de Excel para Modelado Financiero: Nivel: Avanzado."
+                        ] 
+                    },
+                    { 
+                        id: 14, 
+                        name: "Gerson Lopez Martinez", 
+                        role: "Coordinador", 
+                        score: 88, 
+                        report: "Gerson es un candidato con un perfil muy interesante que combina una visión estratégica de alto nivel con una base ética sólida (82% en la prueba). Su principal fortaleza es su capacidad para proponer soluciones transformadoras. Su área de oportunidad es refinar sus habilidades de análisis financiero para sustentar su visión con modelos de datos más robustos.", 
+                        videoUrl: "https://www.youtube.com/embed/xUNZ39x9veE", 
+                        examUrl: "https://drive.google.com/file/d/16k3GcusiflANoqrMPIW3ajmysPaqAtbw/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1ATEhl2MXuXxxiXJiLxra6ld4ICg_M1sy/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/801a19a3-269b-46f4-82c9-efa7e0897628?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1SjrCA3q7x6-3y4bFJ1DbyjPLEdxXwe7C/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Taller de Análisis de Capital de Trabajo: Nivel: Avanzado.",
+                            "Seminario de Tesorería Estratégica: Nivel: Liderazgo.",
+                            "Diplomado en Finanzas Corporativas: Nivel: Especialización."
+                        ] 
+                    },
+                    { 
+                        id: 15, 
+                        name: "Paola Trejo", 
+                        role: "Analista", 
+                        score: 74, 
+                        report: "Paola es una empleada valiosa con una excelente actitud y un claro potencial de crecimiento. Su evaluación técnica (70%) indica que su desarrollo se ha enfocado más en los procesos internos que en los fundamentos de control financiero. Requiere capacitación para operar con la autonomía y el criterio que se esperan de un analista consolidado.", 
+                        videoUrl: "https://www.youtube.com/embed/xUNZ39x9veE", 
+                        examUrl: "https://drive.google.com/file/d/1sXAF4g1_3BIRHmuCVEAHkhnkCtTB0_IZ/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1ucE91QWAIBeJO2bzgsYJ9LlSayGt9dGT/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/cac6a7c5-916b-42d9-8a4a-7f74707a31d9?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1u2AFYQkwE0gpk7d10Vbtc5MBksKGnKK8/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Curso de Fundamentos de Tesorería y Control de Efectivo: Nivel: Básico.",
+                            "Taller de Conciliaciones Bancarias: Nivel: Intermedio.",
+                            "Curso de Excel para Finanzas: Nivel: Intermedio.",
+                            "Seminario de Gestión de Portales Bancarios: Nivel: Básico."
+                        ] 
+                    },
+                    { 
+                        id: 16, 
+                        name: "Guillermina Basilio", 
+                        role: "Analista", 
+                        score: 87, 
+                        report: "Guillermina es una profesional técnicamente competente (82%), con una sólida ética de trabajo y un historial comprobado de mejora de procesos de control. Su principal desafío no es técnico, sino de desarrollo profesional y de \"habilidades blandas\", ya que manifiesta frustración por la falta de crecimiento.", 
+                        videoUrl: "https://www.youtube.com/embed/0qhJiK9zLqk", 
+                        examUrl: "https://drive.google.com/file/d/16hzxC1SCCZKIlcDp45txOQBWTZ7BOMqI/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1O-Uq9qHKvQ7ZuuEvUfuH5kBlMJzn8JUO/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/ec06b012-73c1-4ef3-a742-3d634c4ece06?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1846nhK02J-gJx5LRcYXgYj_hnwV8hdxJ/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Taller de Comunicación Asertiva y Retroalimentación Efectiva: Nivel: Avanzado.",
+                            "Curso de Excel Avanzado para Análisis de Datos: Nivel: Avanzado.",
+                            "Seminario de Identificación y Prevención de Fraudes: Nivel: Especialización."
+                        ] 
+                    },
+                    { 
+                        id: 17, 
+                        name: "Jorge Luis Sandoval Covarrubias", 
+                        role: "Analista", 
+                        score: 90, 
+                        report: "Jorge es un perfil de alto potencial que opera por encima de las expectativas de un rol de analista. Su sólida base técnica (82%) y su capacidad para proponer mejoras estructurales lo convierten en un activo invaluable. Su principal área de desarrollo es aprender a estructurar sus excelentes ideas en \"casos de negocio\" formales para presentarlas a la dirección.", 
+                        videoUrl: "https://www.youtube.com/embed/xKzxkkXxc1o", 
+                        examUrl: "https://drive.google.com/file/d/1H6T4kd9wmYA-pBRWglCLonOKjwtneFZs/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1zwWZQNJErF5rTni6_SeeEfppf20AC6QC/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/2cf66b2c-5574-46d4-b4b2-151629e057ed?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1G4muBX0eQ2-z_NLO5fS73si3KhrjkYoD/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Curso de Gestión de Proyectos para No Project Managers: Nivel: Intermedio.",
+                            "Seminario de Finanzas Corporativas (Análisis de ROI): Nivel: Intermedio.",
+                            "Curso de Automatización de Procesos (RPA): Nivel: Especialización."
+                        ] 
+                    },
+                     { 
+                        id: 18, 
+                        name: "Mayra Velasquez Ojeda", 
+                        role: "Analista", 
+                        score: 58, 
+                        report: "Mayra es una candidata con una excelente actitud y disposición para aprender, pero su evaluación técnica (52%) revela una brecha muy significativa de conocimientos. Su perfil actual es el de una auxiliar con mucho potencial, pero que requiere una inversión considerable en capacitación para poder desempeñar las funciones de un analista.", 
+                        videoUrl: "https://www.youtube.com/embed/gQZV3bfLmZw", 
+                        examUrl: "https://drive.google.com/file/d/1IgejzJqklCAyPCOMgd_l-l3Hgr3gsIjU/view?usp=drive_link", 
+                        interviewUrl: "https://docs.google.com/spreadsheets/d/1tg3gQXcW7HuOiSIBdRR4gBX-hJH59eeK/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
+                        notebookLMUrl: "https://notebooklm.google.com/notebook/225991a1-7cc2-4a9e-ae27-d8d9f233a7fe?authuser=1",
+                        finalReportUrl: "https://docs.google.com/document/d/1PdNOlp-KFH_IgB90_qhP57Ip0o0sZamD/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        training: [
+                            "Curso de Fundamentos de Tesorería para Principiantes: Nivel: Básico.",
+                            "Taller de Conciliaciones Bancarias: Nivel: Básico.",
+                            "Curso de Excel Básico a Intermedio: Nivel: Fundamental.",
+                            "Seminario de Gestión de Portales Bancarios: Nivel: Básico."
+                        ] 
+                    }
+                ],
+                idealProfiles: {
+                    coordinador: {
+                        name: "Coordinador de Tesorería",
+                        objetivo: "Optimizar y salvaguardar los recursos monetarios de la empresa mediante la gestión eficiente del flujo de efectivo, la relación con instituciones financieras y la implementación de controles que garanticen la estabilidad y salud financiera del negocio.",
+                        funciones: ["Desarrollar y supervisar las proyecciones de flujo de efectivo.", "Gestionar y optimizar la posición de efectivo y las inversiones.", "Negociar y mantener la relación estratégica con los bancos.", "Implementar, supervisar y mantener los controles internos del área."],
+                        experiencia: "Mínimo de 4 a 6 años de experiencia en áreas de tesorería o finanzas corporativas, con al menos 2 años en una posición de supervisión o liderazgo de equipos.",
+                        conocimientos: ["Modelado y análisis financiero (flujo de efectivo, análisis de variaciones).", "Gestión de relaciones bancarias y productos financieros.", "Principios de gobierno corporativo y gestión de riesgos.", "Dominio de Excel avanzado y deseable manejo de algún ERP."]
+                    },
+                    analista: {
+                        name: "Analista de Tesorería",
+                        objetivo: "Ejecutar las operaciones diarias de tesorería, como la elaboración de conciliaciones bancarias y el registro de movimientos, para asegurar la correcta administración y control de los recursos financieros de la empresa.",
+                        funciones: ["Elaborar las conciliaciones bancarias y dar seguimiento a partidas no identificadas.", "Registrar los ingresos y egresos en los sistemas correspondientes.", "Apoyar en la preparación de reportes de flujo de efectivo y posición de saldos.", "Gestionar y controlar los fondos fijos de las sucursales."],
+                        experiencia: "De 1 a 3 años de experiencia en puestos de tesorería, contabilidad o administración.",
+                        conocimientos: ["Proceso de conciliaciones bancarias.", "Manejo de portales y plataformas bancarias.", "Principios básicos de control interno.", "Manejo de Excel a nivel intermedio y alta atención al detalle."]
+                    }
+                }
+            }
+        };
+
+        // --- DOM Elements ---
+        const allViews = document.querySelectorAll('#introView, #areaDetailView, #profileList, #profileDetail');
+        const areaSelectionContainer = document.getElementById('areaSelectionContainer');
+        const areaDetailTitle = document.getElementById('areaDetailTitle');
+        const analysisContainer = document.getElementById('analysisContainer');
+        const idealProfileSection = document.getElementById('idealProfileSection');
+        const idealProfileTabs = document.getElementById('idealProfileTabs');
+        const idealProfileContent = document.getElementById('idealProfileContent');
+
+        let currentArea = null;
+        let areaChartInstance = null;
+
+        // --- Functions ---
+        function showView(viewId) {
+            allViews.forEach(view => view.style.display = 'none');
+            document.getElementById(viewId).style.display = 'block';
+            window.scrollTo(0, 0); // Scroll to top on view change
+        }
+
+        function getSemaphoreInfo(score) {
+            if (score >= 85) { // Adjusted threshold for Green
+                return { color: 'bg-green-500', textColor: 'text-green-800', text: 'Perfil Estratégico y de Alto Desempeño' };
+            } else if (score >= 70) {
+                return { color: 'bg-yellow-400', textColor: 'text-yellow-800', text: 'Perfil Funcional con Potencial de Desarrollo' };
+            } else {
+                return { color: 'bg-red-500', textColor: 'text-red-800', text: 'Perfil con Brechas Críticas' };
+            }
+        }
+        
+        function renderIntroView() {
+            areaSelectionContainer.innerHTML = '';
+            const areaOrder = ['nominas', 'contabilidad', 'compras', 'pagar', 'tesoreria'];
+            areaOrder.forEach(key => {
+                const area = evaluationData[key];
+                const button = document.createElement('button');
+                button.className = 'btn btn-primary';
+                button.textContent = area.title;
+                button.onclick = () => showAreaDetail(key);
+                areaSelectionContainer.appendChild(button);
+            });
+            showView('introView');
+        }
+
+        function createAreaChart(areaKey) {
+            const area = evaluationData[areaKey];
+            const ctx = document.getElementById('areaChart').getContext('2d');
+            
+            if (areaChartInstance) {
+                areaChartInstance.destroy();
+            }
+
+            areaChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Conocimiento Técnico', 'Dominio Operativo y de Procesos', 'Iniciativa y Aporte de Valor'],
+                    datasets: [
+                        {
+                            label: 'Conocimiento Técnico',
+                            data: [area.scores.technical, 100 - area.scores.technical],
+                            backgroundColor: ['#881337', '#e2e8f0'],
+                            borderWidth: 0,
+                            borderRadius: 5,
+                        },
+                        {
+                            label: 'Dominio Operativo y de Procesos',
+                            data: [area.scores.general, 100 - area.scores.general],
+                            backgroundColor: ['#9f1239', '#e2e8f0'],
+                            borderWidth: 0,
+                            borderRadius: 5,
+                        },
+                        {
+                            label: 'Iniciativa y Aporte de Valor',
+                            data: [area.scores.personal, 100 - area.scores.personal],
+                            backgroundColor: ['#be123c', '#e2e8f0'],
+                            borderWidth: 0,
+                            borderRadius: 5,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '55%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                generateLabels: function(chart) {
+                                    return chart.data.datasets.map((dataset, i) => ({
+                                        text: `${dataset.label}: ${dataset.data[0]}%`,
+                                        fillStyle: dataset.backgroundColor[0],
+                                        strokeStyle: dataset.backgroundColor[0],
+                                        datasetIndex: i
+                                    }));
+                                }
+                            }
+                        },
+                        tooltip: {
+                            filter: function(tooltipItem) {
+                                return tooltipItem.dataIndex === 0;
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderIdealProfile(roleKey) {
+            const profile = evaluationData[currentArea].idealProfiles[roleKey];
+            idealProfileContent.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Objetivo del Puesto</h4>
+                        <p class="text-gray-600 text-sm">${profile.objetivo}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Experiencia Requerida</h4>
+                        <p class="text-gray-600 text-sm">${profile.experiencia}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Funciones Principales</h4>
+                        <ul class="list-disc list-inside text-gray-600 text-sm space-y-1">
+                            ${profile.funciones.map(f => `<li>${f}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Conocimientos Clave</h4>
+                        <ul class="list-disc list-inside text-gray-600 text-sm space-y-1">
+                            ${profile.conocimientos.map(k => `<li>${k}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+            // Update active tab class
+            document.querySelectorAll('#idealProfileTabs .tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.tab[data-role='${roleKey}']`).classList.add('active');
+        }
+
+        function showAreaDetail(areaKey) {
+            currentArea = areaKey;
+            const area = evaluationData[areaKey];
+            
+            areaDetailTitle.textContent = `Resultados: ${area.title}`;
+            
+            // Populate analysis section
+            analysisContainer.innerHTML = ''; // Clear previous
+            if (area.analysis && area.analysis.length > 0) {
+                const ul = document.createElement('ul');
+                ul.className = 'list-disc list-outside space-y-3 pl-5';
+                area.analysis.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = item; // Use innerHTML to parse <strong> tags
+                    ul.appendChild(li);
+                });
+                analysisContainer.appendChild(ul);
+            }
+
+
+            createAreaChart(areaKey);
+            
+            if (area.idealProfiles && Object.keys(area.idealProfiles).length > 0) {
+                idealProfileSection.style.display = 'block';
+                idealProfileTabs.innerHTML = '';
+                Object.keys(area.idealProfiles).forEach(roleKey => {
+                    const profile = area.idealProfiles[roleKey];
+                    const tab = document.createElement('button');
+                    tab.className = 'tab';
+                    tab.textContent = profile.name;
+                    tab.dataset.role = roleKey;
+                    tab.onclick = () => renderIdealProfile(roleKey);
+                    idealProfileTabs.appendChild(tab);
+                });
+                // Render the first profile by default
+                renderIdealProfile(Object.keys(area.idealProfiles)[0]);
+            } else {
+                idealProfileSection.style.display = 'none';
+            }
+            
+            showView('areaDetailView');
+        }
+
+        function showProfileList(areaKey) {
+            const area = evaluationData[areaKey];
+            document.getElementById('profileListTitle').textContent = `Perfiles Evaluados: ${area.title}`;
+            const profilesContainer = document.getElementById('profilesContainer');
+            profilesContainer.innerHTML = '';
+            area.employees.forEach(employee => {
+                const semaphore = getSemaphoreInfo(employee.score);
+                const profileCard = document.createElement('div');
+                profileCard.className = 'card text-center p-4 cursor-pointer flex flex-col justify-between';
+                profileCard.onclick = () => showProfileDetail(employee.id);
+                profileCard.innerHTML = `
+                    <div>
+                        <div class="w-16 h-16 bg-rose-100 text-rose-800 rounded-full mx-auto flex items-center justify-center text-2xl font-bold mb-3">
+                            ${employee.name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <h4 class="font-semibold text-gray-800">${employee.name}</h4>
+                        <p class="text-xs text-gray-500 mb-2">${employee.role || ''}</p>
+                        <p class="text-lg font-bold text-rose-800">${employee.score}/100</p>
+                    </div>
+                    <div class="mt-4 text-xs font-medium p-2 rounded-md ${semaphore.color.replace('bg-', 'bg-opacity-10 ')} ${semaphore.textColor} flex items-center justify-center">
+                        <span class="h-3 w-3 rounded-full ${semaphore.color} mr-2"></span>
+                        <span>${semaphore.text}</span>
+                    </div>
+                `;
+                profilesContainer.appendChild(profileCard);
+            });
+            showView('profileList');
+        }
+        
+        function showProfileDetail(employeeId) {
+            const area = evaluationData[currentArea];
+            const employee = area.employees.find(e => e.id === employeeId);
+
+            document.getElementById('profileName').textContent = employee.name;
+            
+            const videoContainer = document.getElementById('videoContainer');
+            videoContainer.innerHTML = ''; // Clear previous content
+            const videoUrls = Array.isArray(employee.videoUrl) ? employee.videoUrl : [employee.videoUrl];
+            
+            let videoHTML = '';
+            videoUrls.forEach(url => {
+                videoHTML += `<iframe class="w-full aspect-video mb-4 rounded-lg" src="${url}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            });
+            videoContainer.innerHTML = videoHTML;
+
+            document.getElementById('profileReport').textContent = employee.report;
+            document.getElementById('profileScore').textContent = employee.score;
+            
+            const semaphore = getSemaphoreInfo(employee.score);
+            const semaphoreDetailContainer = document.getElementById('semaphoreDetailContainer');
+            semaphoreDetailContainer.innerHTML = `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${semaphore.color.replace('bg-', 'bg-opacity-20 ')} ${semaphore.textColor}">
+                <span class="h-3 w-3 rounded-full ${semaphore.color} mr-2"></span>
+                ${semaphore.text}
+            </span>`;
+
+            document.getElementById('examLink').href = employee.examUrl;
+            document.getElementById('interviewLink').href = employee.interviewUrl;
+            document.getElementById('notebookLink').href = employee.notebookLMUrl;
+            document.getElementById('finalReportLink').style.display = employee.finalReportUrl ? 'inline-block' : 'none';
+            if(employee.finalReportUrl) {
+                document.getElementById('finalReportLink').href = employee.finalReportUrl;
+            }
+            
+            const trainingPlanUl = document.getElementById('trainingPlan');
+            trainingPlanUl.innerHTML = '';
+            employee.training.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                trainingPlanUl.appendChild(li);
+            });
+
+            showView('profileDetail');
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('backToIntroBtn').addEventListener('click', renderIntroView);
+        document.getElementById('viewProfilesBtn').addEventListener('click', () => showProfileList(currentArea));
+        document.getElementById('backToAreaBtn').addEventListener('click', () => showAreaDetail(currentArea));
+        document.getElementById('backToProfilesBtn').addEventListener('click', () => showProfileList(currentArea));
+
+        // --- Initial Render ---
+        document.addEventListener('DOMContentLoaded', renderIntroView);
+    </script>
+</body>
+</html>
