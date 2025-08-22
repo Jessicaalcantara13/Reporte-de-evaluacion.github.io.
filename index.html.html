@@ -64,6 +64,32 @@
             color: #881337; /* rose-900 */
             border-color: #881337; /* rose-900 */
         }
+        /* Treemap Styles */
+        .treemap-container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 0.5rem;
+            background-color: #f1f5f9;
+            border-radius: 0.5rem;
+            min-height: 300px;
+        }
+        .treemap-item {
+            padding: 1rem;
+            margin: 0.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            flex-grow: 1;
+            transition: transform 0.2s ease;
+        }
+        .treemap-item:hover {
+            transform: scale(1.02);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="p-4 sm:p-6 md:p-8">
@@ -100,10 +126,26 @@
                 <p class="text-gray-600 mb-6">
                     El propósito de este informe es presentar un panorama claro del estado actual de cada área, identificar las fortalezas individuales y colectivas, señalar las oportunidades de desarrollo y proponer planes de acción concretos.
                 </p>
-                <h3 class="text-xl font-semibold text-gray-700 mb-4">Seleccione un Área para ver los Resultados:</h3>
-                <div id="areaSelectionContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <!-- Botones de selección de área se insertarán aquí -->
+                
+                <!-- Mapa de Calor (Treemap) -->
+                <div class="mt-8">
+                    <div class="flex justify-between items-center mb-4 flex-wrap">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-2 md:mb-0">Mapa de Calor: Desempeño por Área</h3>
+                        <div id="heatmap-legend" class="flex items-center space-x-2 text-sm text-gray-600">
+                            <span>Bajo</span>
+                            <div class="w-6 h-4 rounded" style="background-color: #ef4444;"></div>
+                            <div class="w-6 h-4 rounded" style="background-color: #f97316;"></div>
+                            <div class="w-6 h-4 rounded" style="background-color: #facc15;"></div>
+                            <div class="w-6 h-4 rounded" style="background-color: #84cc16;"></div>
+                            <div class="w-6 h-4 rounded" style="background-color: #16a34a;"></div>
+                            <span>Alto</span>
+                        </div>
+                    </div>
+                    <div id="treemapContainer" class="treemap-container">
+                        <!-- Treemap items will be inserted here by JS -->
+                    </div>
                 </div>
+
             </div>
         </section>
 
@@ -336,7 +378,7 @@
                         examUrl: "https://drive.google.com/file/d/1GbX39zOmdrcjH5KbSeE5QhcXtwRGdX20/view?usp=drive_link", 
                         interviewUrl: "https://docs.google.com/spreadsheets/d/1_K6tseOse-N8fkxe4EMD_EDCggUaiQij/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true", 
                         notebookLMUrl: "https://notebooklm.google.com/notebook/2e7313cb-d5f9-4ec9-b63a-22875dd31333?authuser=1",
-                        finalReportUrl: "https://docs.google.com/document/d/1xWpISdqWD2UTe8us-fpel4jtJDK0pWQB/edit?usp=drive_link&ouid=105862658004586565635&rtpof=true&sd=true",
+                        finalReportUrl: "https://docs.google.com/document/d/1xWpISdqWD2UTe8us-fpel4jtJDK0pWQB/edit?usp=drive_link&ouid=1058626580045865635&rtpof=true&sd=true",
                         training: [
                             "Certificación en Negociación Estratégica y Contratos – Nivel avanzado",
                             "Seminario de Implementación de Modelos de Costo Total (TCA) – Nivel liderazgo",
@@ -672,18 +714,20 @@
         };
 
         // --- DOM Elements ---
-        const allViews = document.querySelectorAll('#introView, #areaDetailView, #profileList, #profileDetail');
-        const areaSelectionContainer = document.getElementById('areaSelectionContainer');
-        const areaDetailTitle = document.getElementById('areaDetailTitle');
-        const analysisContainer = document.getElementById('analysisContainer');
-        const idealProfileSection = document.getElementById('idealProfileSection');
-        const idealProfileTabs = document.getElementById('idealProfileTabs');
-        const idealProfileContent = document.getElementById('idealProfileContent');
-
-        let currentArea = null;
+        let allViews, areaDetailTitle, analysisContainer, idealProfileSection, idealProfileTabs, idealProfileContent;
         let areaChartInstance = null;
+        let currentArea = null;
 
         // --- Functions ---
+        function init() {
+            allViews = document.querySelectorAll('#introView, #areaDetailView, #profileList, #profileDetail');
+            areaDetailTitle = document.getElementById('areaDetailTitle');
+            analysisContainer = document.getElementById('analysisContainer');
+            idealProfileSection = document.getElementById('idealProfileSection');
+            idealProfileTabs = document.getElementById('idealProfileTabs');
+            idealProfileContent = document.getElementById('idealProfileContent');
+        }
+
         function showView(viewId) {
             allViews.forEach(view => view.style.display = 'none');
             document.getElementById(viewId).style.display = 'block';
@@ -701,17 +745,48 @@
         }
         
         function renderIntroView() {
-            areaSelectionContainer.innerHTML = '';
-            const areaOrder = ['nominas', 'contabilidad', 'compras', 'pagar', 'tesoreria'];
-            areaOrder.forEach(key => {
-                const area = evaluationData[key];
-                const button = document.createElement('button');
-                button.className = 'btn btn-primary';
-                button.textContent = area.title;
-                button.onclick = () => showAreaDetail(key);
-                areaSelectionContainer.appendChild(button);
-            });
+            renderHeatmap();
             showView('introView');
+        }
+
+        function getTreemapColor(score) {
+            if (score >= 85) return '#16a34a'; // green-600
+            if (score >= 75) return '#84cc16'; // lime-500
+            if (score >= 65) return '#facc15'; // yellow-400
+            if (score >= 50) return '#f97316'; // orange-500
+            return '#ef4444'; // red-500
+        }
+
+        function renderHeatmap() {
+            const treemapContainer = document.getElementById('treemapContainer');
+            treemapContainer.innerHTML = '';
+
+            const areaData = Object.keys(evaluationData).map(key => {
+                const area = evaluationData[key];
+                const avgScore = (area.scores.technical + area.scores.general + area.scores.personal) / 3;
+                return {
+                    key: key,
+                    name: area.title,
+                    value: area.employees.length,
+                    score: Math.round(avgScore)
+                };
+            });
+
+            const totalValue = areaData.reduce((sum, item) => sum + item.value, 0);
+
+            areaData.forEach(area => {
+                const item = document.createElement('div');
+                item.className = 'treemap-item';
+                item.style.flexBasis = `${(area.value / totalValue) * 100}%`;
+                item.style.backgroundColor = getTreemapColor(area.score);
+                item.onclick = () => showAreaDetail(area.key);
+                
+                item.innerHTML = `
+                    <span class="font-bold text-lg">${area.name}</span>
+                    <span class="font-semibold text-2xl">${area.score}%</span>
+                `;
+                treemapContainer.appendChild(item);
+            });
         }
 
         function createAreaChart(areaKey) {
@@ -932,14 +1007,20 @@
             showView('profileDetail');
         }
 
-        // --- Event Listeners ---
-        document.getElementById('backToIntroBtn').addEventListener('click', renderIntroView);
-        document.getElementById('viewProfilesBtn').addEventListener('click', () => showProfileList(currentArea));
-        document.getElementById('backToAreaBtn').addEventListener('click', () => showAreaDetail(currentArea));
-        document.getElementById('backToProfilesBtn').addEventListener('click', () => showProfileList(currentArea));
+        // --- Event Listeners & Initial Render ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Assign DOM elements now that the document is loaded
+            init();
 
-        // --- Initial Render ---
-        document.addEventListener('DOMContentLoaded', renderIntroView);
+            // Attach event listeners
+            document.getElementById('backToIntroBtn').addEventListener('click', renderIntroView);
+            document.getElementById('viewProfilesBtn').addEventListener('click', () => showProfileList(currentArea));
+            document.getElementById('backToAreaBtn').addEventListener('click', () => showAreaDetail(currentArea));
+            document.getElementById('backToProfilesBtn').addEventListener('click', () => showProfileList(currentArea));
+
+            // Initial Render
+            renderIntroView();
+        });
     </script>
 </body>
 </html>
